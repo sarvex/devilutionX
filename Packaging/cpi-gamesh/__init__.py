@@ -89,7 +89,12 @@ class DevilutionPage(Page):
 	def GitGetRevision(self):
 		if not os.path.exists(self._GamePath):
 			return "game not installed"
-		process = subprocess.Popen("cd " + pipes.quote(self._GamePath) + "; git rev-parse HEAD",stdout=subprocess.PIPE,stderr=subprocess.STDOUT, shell=True)
+		process = subprocess.Popen(
+			f"cd {pipes.quote(self._GamePath)}; git rev-parse HEAD",
+			stdout=subprocess.PIPE,
+			stderr=subprocess.STDOUT,
+			shell=True,
+		)
 		self._GitRevision = process.communicate()[0].strip()
 		process.wait()
 		return self._GitRevision
@@ -107,7 +112,9 @@ class DevilutionPage(Page):
 			os.makedirs(self._GamePath)
 		except:
 			pass
-		self.StartShellProcess("cd " + pipes.quote(self._GamePath) + "; git clone --single-branch --branch " + pipes.quote(self._GitBranch) + " " + pipes.quote(self._GitURL) + " .")
+		self.StartShellProcess(
+			f"cd {pipes.quote(self._GamePath)}; git clone --single-branch --branch {pipes.quote(self._GitBranch)} {pipes.quote(self._GitURL)} ."
+		)
 
 	def CheckDevilutionMPQ(self):
 		self._DevilutionDiabdatmpqPresent = os.path.isfile(self._DevilutionDiabdatmpq)
@@ -132,10 +139,13 @@ class DevilutionPage(Page):
 	def Init(self):
 		Page.Init(self)
 
-		if self._Screen != None:
-			if self._Screen._CanvasHWND != None and self._CanvasHWND == None:
-				self._HWND = self._Screen._CanvasHWND
-				self._CanvasHWND = pygame.Surface( (self._Screen._Width,self._Screen._Height) )
+		if (
+			self._Screen != None
+			and self._Screen._CanvasHWND != None
+			and self._CanvasHWND is None
+		):
+			self._HWND = self._Screen._CanvasHWND
+			self._CanvasHWND = pygame.Surface( (self._Screen._Width,self._Screen._Height) )
 
 		if os.path.isfile(self._GamePNG):
 			self._GameIcon = IconItem()
@@ -153,15 +163,12 @@ class DevilutionPage(Page):
 		self.UpdateLabel("content_bin_rev", self.ExectuableGetRevision(), 24)
 
 	def UpdateLabel(self, label, msg, maxLen=38):
-		print(label + ": " + msg)
-		if len(msg) > maxLen:
-			m = msg[:maxLen] + "..."
-		else:
-			m = msg
+		print(f"{label}: {msg}")
+		m = f"{msg[:maxLen]}..." if len(msg) > maxLen else msg
 		self._Labels[label].SetText(m)
 
 	def StartShellProcess(self, cmd):
-		print("StartShellProcess " + cmd)
+		print(f"StartShellProcess {cmd}")
 		proc = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT, shell=True)
 		while(True):
 			line = proc.stdout.readline()
@@ -184,8 +191,8 @@ class DevilutionPage(Page):
 			self.InitGameDirectory()
 		else:
 			curRev = self.GitGetRevision()
-			self.StartShellProcess("cd " + pipes.quote(self._GamePath) + "; git pull")
-		
+			self.StartShellProcess(f"cd {pipes.quote(self._GamePath)}; git pull")
+
 		self._GitRevision = self.GitGetRevision()
 		self.UpdateLabel("content_git_rev", self._GitRevision, 24)
 
@@ -243,13 +250,12 @@ class DevilutionPage(Page):
 		elif not self._GameInstalled:
 			if event.key == CurKeys["X"]:
 				self.UpgradeAndBuild()
-		elif not self._DevilutionDiabdatmpqPresent:
-			if IsKeyStartOrA(event.key):
-				self.CheckDevilutionMPQ()
-				self.CheckGameInstalled()
-				self.UpdateFootMsg()
-				self._Screen.Draw()
-				self._Screen.SwapAndShow()
+		elif IsKeyStartOrA(event.key):
+			self.CheckDevilutionMPQ()
+			self.CheckGameInstalled()
+			self.UpdateFootMsg()
+			self._Screen.Draw()
+			self._Screen.SwapAndShow()
 
 	def Draw(self):
 		self.ClearCanvas()
